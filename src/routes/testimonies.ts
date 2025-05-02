@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { testimonyController } from '../controllers/testimonies';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', testimonyController.getAllTestimonies);
 

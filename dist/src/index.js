@@ -1,29 +1,29 @@
-import express, {Express} from "express";
-import cors from "cors";
-import helmet from "helmet";
-import morgan from "morgan";
-import path from "node:path";
-import { routes } from './routes';
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
+const morgan_1 = __importDefault(require("morgan"));
+const node_path_1 = __importDefault(require("node:path"));
+const routes_1 = require("./routes");
 // import { errorHandler } from './middleware';
-
-const app: Express = express();
+const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
-
-app.use(helmet({
+app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
         directives: {
-            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            ...helmet_1.default.contentSecurityPolicy.getDefaultDirectives(),
             "script-src": ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
             "img-src": ["'self", "data:"],
         },
     },
 }));
-
-app.use(morgan("combined"));
-
+app.use((0, morgan_1.default)("combined"));
 // NOW this is looking good
-app.use(cors({
+app.use((0, cors_1.default)({
     origin: [
         'https://localhost:5173',
         'http://localhost:5173',
@@ -38,19 +38,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
-
-app.use(express.json());
-
-app.use('/api', routes);
-
+app.use(express_1.default.json());
+app.use('/api', routes_1.routes);
 app.get('/health', (req, res) => {
     res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
-
 // Landing page
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use(express_1.default.static(node_path_1.default.join(__dirname, 'public')));
+app.use((err, req, res, next) => {
     console.error(`Error: ${err.message}`);
     res.status(500).json({
         success: false,
@@ -58,18 +53,13 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
-
-const publicPath = path.join(__dirname, '..', 'public');
-app.use(express.static(publicPath));
+const publicPath = node_path_1.default.join(__dirname, '..', 'public');
+app.use(express_1.default.static(publicPath));
 app.get(/^\/(?!api).*/, (_req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    res.sendFile(node_path_1.default.join(publicPath, 'index.html'));
 });
-
 app.listen(PORT, () => {
     console.log(`Listening on ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
-
-
-export default app;
-
-
+exports.default = app;
+//# sourceMappingURL=index.js.map
