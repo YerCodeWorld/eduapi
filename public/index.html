@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGuiders API - Your EduPlatform Backend</title>
+    <link rel="stylesheet" href="css/style.css">  <!--For some motherfather reason this is not working-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css">
+</head>
+<style>
+    :root {
+        --primary: #A47BB9;
+        --primary-dark: #8A66A0;
+        --dark: #333333;
+        --light: #f7f9fc;
+        --gray: #666666;
+        --light-gray: #eeeeee;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --info: #17a2b8;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        line-height: 1.6;
+        color: var(--dark);
+        background-color: var(--light);
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+    }
+
+    header {
+        background-color: var(--primary);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .icon {
+        font-size: 28px;
+        margin-right: 15px;
+    }
+
+    h1 {
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .tagline {
+        font-size: 18px;
+        opacity: 0.9;
+    }
+
+    main {
+        padding: 30px;
+    }
+
+    section {
+        margin-bottom: 40px;
+    }
+
+    .status-card {
+        background-color: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .status {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .status-indicator {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 15px;
+        position: relative;
+    }
+
+    .status-indicator.online {
+        background-color: var(--success);
+    }
+
+    .status-indicator.offline {
+        background-color: var(--danger);
+    }
+
+    .pulse {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: var(--success);
+        opacity: 0.6;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.6;
+        }
+        70% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+
+    .status-text h2 {
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
+
+    .highlight {
+        color: var(--success);
+        font-weight: 600;
+    }
+
+    .endpoints {
+        margin-top: 15px;
+    }
+
+    .endpoints h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .endpoint-link {
+        display: inline-block;
+        background-color: #e9ecef;
+        padding: 8px 16px;
+        border-radius: 4px;
+        color: var(--dark);
+        text-decoration: none;
+        font-family: 'Courier New', monospace;
+        transition: var(--transition);
+    }
+
+    .endpoint-link:hover {
+        background-color: #dee2e6;
+    }
+
+    .documentation h2 {
+        margin-bottom: 20px;
+        font-size: 24px;
+        color: var(--primary-dark);
+    }
+
+    .doc-section {
+        background-color: white;
+        border: 1px solid var(--light-gray);
+        border-radius: var(--border-radius);
+        padding: 25px;
+    }
+
+    .doc-section h3 {
+        margin-bottom: 15px;
+        font-size: 18px;
+    }
+
+    .resource-list {
+        list-style: none;
+    }
+
+    .resource-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--light-gray);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .resource-list li:last-child {
+        border-bottom: none;
+    }
+
+    .resource-method {
+        background-color: var(--primary);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .resource-path {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .resource-desc {
+        color: var(--gray);
+        font-size: 14px;
+    }
+
+    footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid var(--light-gray);
+        padding: 20px 30px;
+        text-align: center;
+        color: var(--gray);
+        font-size: 14px;
+    }
+
+    footer p:first-child {
+        margin-bottom: 10px;
+    }
+
+    .api-url {
+        font-family: 'Courier New', monospace;
+        background-color: #e9ecef;
+        padding: 3px 6px;
+        border-radius: 4px;
+        color: var(--primary-dark);
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+        }
+
+        header {
+            padding: 30px 20px;
+        }
+
+        .icon {
+            font-size: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        .status-card, .doc-section {
+            padding: 20px;
+        }
+
+        .resource-list li {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 15px 0;
+            gap: 8px;
+        }
+
+        .resource-path {
+            word-break: break-all;
+        }
+    }
+    </style>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="icon"><i class="fas fa-server"></i></span>
+                <h1>EduAPI</h1>
+            </div>
+            <p class="tagline">Powering your educational platform</p>
+        </header>
+
+        <main>
+            <section class="status-card">
+                <div class="status">
+                    <div class="status-indicator online">
+                        <span class="pulse"></span>
+                    </div>
+                    <div class="status-text">
+                        <h2>API Status: <span class="highlight">Online</span></h2>
+                        <p>The API is running smoothly</p>
+                    </div>
+                </div>
+                <div class="endpoints">
+                    <h3>Health Check:</h3>
+                    <a href="/health" class="endpoint-link" target="_blank">/health</a>
+                </div>
+            </section>
+
+            <section class="documentation">
+                <h2>API Documentation</h2>
+                <div class="doc-section">
+                    <h3>Available Resources</h3>
+                    <ul class="resource-list">
+                        <li>
+                            <span class="resource-method">GET</span>
+                            <span class="resource-path">/api/users</span>
+                            <span class="resource-desc">Get all users</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">GET</span>
+                            <span class="resource-path">/api/users/email/:email</span>
+                            <span class="resource-desc">Get user by email</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">POST</span>
+                            <span class="resource-path">/api/users</span>
+                            <span class="resource-desc">Create a new user</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">PUT</span>
+                            <span class="resource-path">/api/users/email/:email</span>
+                            <span class="resource-desc">Update user information</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">GET</span>
+                            <span class="resource-path">/api/testimonies</span>
+                            <span class="resource-desc">Get all testimonies</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">GET</span>
+                            <span class="resource-path">/api/testimonies/featured</span>
+                            <span class="resource-desc">Get featured testimonies</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">GET</span>
+                            <span class="resource-path">/api/testimonies/user/:email</span>
+                            <span class="resource-desc">Get testimonies by user email</span>
+                        </li>
+                        <li>
+                            <span class="resource-method">POST</span>
+                            <span class="resource-path">/api/testimonies</span>
+                            <span class="resource-desc">Create a new testimony</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 EduGuiders. All rights reserved.</p>
+            <p>API base URL: <span class="api-url">https://api.ieduguide.com | http://localhost:3001/api</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple script to verify the health endpoint
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+
+                if (data.status === "OK") {
+                    document.querySelector('.status-indicator').classList.add('online');
+                    document.querySelector('.status-indicator').classList.remove('offline');
+                    document.querySelector('.highlight').textContent = 'Online';
+                    document.querySelector('.status-text p').textContent = 'The API is running smoothly';
+                } else {
+                    document.querySelector('.status-indicator').classList.add('offline');
+                    document.querySelector('.status-indicator').classList.remove('online');
+                    document.querySelector('.highlight').textContent = 'Degraded';
+                    document.querySelector('.status-text p').textContent = 'The API is experiencing issues';
+                }
+            } catch (error) {
+                document.querySelector('.status-indicator').classList.add('offline');
+                document.querySelector('.status-indicator').classList.remove('online');
+                document.querySelector('.highlight').textContent = 'Offline';
+                document.querySelector('.status-text p').textContent = 'The API is currently unavailable';
+            }
+        }
+
+        // Check health on page load
+        window.addEventListener('load', checkHealth);
+
+        // Check health every 60 seconds
+        setInterval(checkHealth, 60000);
+    </script>
+</body>
+</html>
