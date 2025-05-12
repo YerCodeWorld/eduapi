@@ -1,0 +1,23 @@
+model Category {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  slug        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  posts       CategoryOnPost[]
+
+  @@map("categories")
+}
+
+model CategoryOnPost {
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId     String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  @@id([postId, categoryId])
+  @@map("category_on_post")
+}
+
+Those above for category management. Avoided at first for
+complexity.

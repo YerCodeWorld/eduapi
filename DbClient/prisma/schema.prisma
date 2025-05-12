@@ -41,20 +41,6 @@ model Testimony {
   @@map("testimonies")
 }
 
-/**
- * authorEmail: 'yahiradolfo39@gmail.com',
- * author: {
- * name: 'James Wilson',
- * picture: teachers,
- * role: 'TEACHER'
- * },
- * categories: [
- * { id: 'cat3', name: 'Inclusion' },
- * { id: 'cat4', name: 'Classroom Management' }
- * ],
- * published: true
- */
-
 // CREATED: New model for posts
 model Post {
   id         String   @id @default(uuid())
@@ -74,55 +60,12 @@ model Post {
   // Is it necessary to add fields for user name, picture and role or letting this like is and infering that other
   // data from the user we get?
 
-  // How is this "Categorties" thing going to work? I believe maybe skipping and adding it later might be wise
-  categories CategoryOnPost[]
-
   // Indexing helps to speed up queries as it provides a bridge in the form of an ID to a model connected through a relation
   // like the ones we are dealing with in here.
   @@index([authorEmail])
   @@index([featured])
   @@index([published])
   @@map("posts")
-}
-
-model Category {
-  id    String           @id @default(uuid())
-  name  String
-  posts CategoryOnPost[]
-
-  @@map("categories")
-}
-
-// For this, we got:
-
-/**
- * // Category table
- * | id  | name               |
- * |-----|-------------------|
- * | 1   | Technology        |
- * | 2   | Teaching Methods  |
- * | 3   | Student Wellbeing |
- * // Post table
- * | id  | title                    |
- * |-----|-------------------------|
- * | A   | Using AI in Classroom   |
- * | B   | Mindfulness Techniques  |
- * // CategoryOnPost (join table)
- * | postId | categoryId |
- * |--------|------------|
- * | A      | 1          | // "Using AI" has "Technology"
- * | A      | 2          | // "Using AI" has "Teaching Methods"
- * | B      | 3          | // "Mindfulness" has "Student Wellbeing"
- */
-
-model CategoryOnPost {
-  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId     String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  categoryId String
-
-  @@id([postId, categoryId])
-  @@map("category_on_post")
 }
 
 // CREATED: New model for extra posts
