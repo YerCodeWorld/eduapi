@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 export declare const postsController: {
     createPost(req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
+    getPostsBySlug(req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
+    getPostByEmail(req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
     getAllPosts(req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
-    getPostsByEmail(req: Request, res: Response, next: NextFunction): Promise<void>;
-    updatePost(req: Request, res: Response, next: NextFunction): Promise<void>;
-    deletePost(req: Request, res: Response, next: NextFunction): Promise<void>;
+    updatePost(req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
+    deletePost(req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
 };
 //# sourceMappingURL=posts.d.ts.map
