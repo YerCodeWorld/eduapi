@@ -71,6 +71,80 @@ export const postsController = {
         }
     },
 
+    async getPostsBySlug(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { slug } = req.params;
+
+            const post = await prisma.post.findUnique({
+                where: { slug },
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            picture: true,
+                            role: true
+                        }
+                    }
+                }
+            });
+
+            if (!post) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Post not found"
+                })
+            }
+
+            return res.status(200).json({
+                success: true,
+                data: post,
+                message: "Post successfully created"
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    async getPostByEmail(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { email } = req.params;
+            const { published, featured } = req.query;
+
+            // Build where clause
+            const where: any = { authorEmail: email };
+            if (published !== undefined) {
+                where.published = published === 'true';
+            }
+            if (featured !== undefined) {
+                where.featured = featured === 'true';
+            }
+
+            const posts = await prisma.post.findMany({
+                where,
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            picture: true,
+                            role: true
+                        }
+                    }
+                }
+            });
+
+            return res.status(200).json({
+                success: true,
+                data: posts
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    },
+
     async getAllPosts(req: Request, res: Response, next: NextFunction) {
         try {
             // Watch out on how the query doesn't have anything to do with the actual model
@@ -128,10 +202,96 @@ export const postsController = {
         }
     },
 
-    async getPostsByEmail(req: Request, res: Response, next: NextFunction) {},
+    async updatePost(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;  // id is unknown as far as I know. Need to check implementation
+            const {
+                title,
+                slug,
+                summary,
+                content,
+                coverImage,
+                featured,
+                published
+            } = req.body;
 
-    async updatePost(req: Request, res: Response, next: NextFunction) {},
+            const existingPost = await prisma.post.findUnique({
+                where: { id }
+            });
 
-    async deletePost(req: Request, res: Response, next: NextFunction) {},
+            if (!existingPost) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Post not found"
+                });
+            }
 
-}
+            // side note: If slug is being changed, check if new slug exists
+            if (slug && slug !== existingPost.slug) {
+                const slugExists = await prisma.post.findUnique({
+                    where: { slug }
+                });
+
+                if (slugExists) {
+                    return res.status(409).json({
+                        success: false,
+                        message: "A post with this slug already exists"
+                    });
+                }
+            }
+
+            const updateData: any = {
+                ...(title && { title }),
+                ...(slug && { slug }),
+                ...(summary && { summary }),
+                ...(content && { content }),
+                ...(coverImage !== undefined && { coverImage }),
+                ...(featured !== undefined && { featured }),
+                ...(published !== undefined && { published })
+            };
+
+            const updatePost = await prisma.post.update({
+                where: { id },
+                data: updateData,
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            picture: true,
+                            role: true
+                        }
+                    }
+                }
+            });
+        } catch (err) { next(err); }
+    },
+
+    async deletePost(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { slug } = req.params;  // here i think it's safer using sluf. didnt on ypdate because of doubts
+
+            const post = await prisma.post.findUnique({
+                where: { slug }
+            });
+
+            if (!post) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Post not found"
+                });
+            }
+
+            await prisma.post.delete({
+                where: { slug }
+            });
+
+            return res.status(200).json({
+                success: true,
+                data: post,
+                message: 'Post deleted successfully'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+};
