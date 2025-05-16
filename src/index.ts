@@ -27,6 +27,7 @@ app.use(cors({
     origin: [
         'https://localhost:5173',
         'http://localhost:5173',
+        'http://localhost:3000',
         'https://api.ieduguide.com',
         'http://api.ieduguide.com',
         'https://ieduguide.com',

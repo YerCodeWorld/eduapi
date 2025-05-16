@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGuiders API - Your EduPlatform Backend</title>
+    <link rel="stylesheet" href="css/style.css">  <!--For some motherfather reason this is not working-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="icon"><i class="fas fa-server"></i></span>
+                <h1>EduAPI</h1>
+            </div>
+            <p class="tagline">Powering your educational platform</p>
+        </header>
+
+        <main>
+            <section class="status-card">
+                <div class="status">
+                    <div class="status-indicator online">
+                        <span class="pulse"></span>
+                    </div>
+                    <div class="status-text">
+                        <h2>API Status: <span class="highlight">Online</span></h2>
+                        <p>The API is running smoothly</p>
+                    </div>
+                </div>
+                <div class="endpoints">
+                    <h3>Health Check:</h3>
+                    <a href="/health" class="endpoint-link" target="_blank">/health</a>
+                </div>
+            </section>
+
+            <section class="documentation">
+                <h2>API Documentation</h2>
+                <div class="doc-section">
+                    <h3>Available Resources</h3>
+                    <ul class="resource-list" id="methods-container">
+
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 EduGuiders. All rights reserved.</p>
+            <p>API base URL: <span class="api-url">https://api.ieduguide.com | http://localhost:3001/api</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple script to verify the health endpoint
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+
+                if (data.status === "OK") {
+                    document.querySelector('.status-indicator').classList.add('online');
+                    document.querySelector('.status-indicator').classList.remove('offline');
+                    document.querySelector('.highlight').textContent = 'Online';
+                    document.querySelector('.status-text p').textContent = 'The API is running smoothly';
+                } else {
+                    document.querySelector('.status-indicator').classList.add('offline');
+                    document.querySelector('.status-indicator').classList.remove('online');
+                    document.querySelector('.highlight').textContent = 'Degraded';
+                    document.querySelector('.status-text p').textContent = 'The API is experiencing issues';
+                }
+            } catch (error) {
+                document.querySelector('.status-indicator').classList.add('offline');
+                document.querySelector('.status-indicator').classList.remove('online');
+                document.querySelector('.highlight').textContent = 'Offline';
+                document.querySelector('.status-text p').textContent = 'The API is currently unavailable';
+            }
+        }
+
+        // Check health on page load
+        window.addEventListener('load', checkHealth);
+
+        // Check health every 60 seconds
+        setInterval(checkHealth, 60000);
+    </script>
+    <script src="documentation.js"></script>
+</body>
+</html>

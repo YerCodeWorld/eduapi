@@ -202,6 +202,9 @@ export const postsController = {
         }
     },
 
+    // update ...
+    // delete ...
+
     async updatePost(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;  // id is unknown as far as I know. Need to check implementation
