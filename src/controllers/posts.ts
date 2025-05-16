@@ -202,15 +202,11 @@ export const postsController = {
         }
     },
 
-    // update ...
-    // delete ...
-
     async updatePost(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;  // id is unknown as far as I know. Need to check implementation
+            const { slug } = req.params;
             const {
                 title,
-                slug,
                 summary,
                 content,
                 coverImage,
@@ -219,7 +215,7 @@ export const postsController = {
             } = req.body;
 
             const existingPost = await prisma.post.findUnique({
-                where: { id }
+                where: { slug }
             });
 
             if (!existingPost) {
@@ -254,7 +250,7 @@ export const postsController = {
             };
 
             const updatePost = await prisma.post.update({
-                where: { id },
+                where: { slug },
                 data: updateData,
                 include: {
                     user: {
@@ -265,6 +261,12 @@ export const postsController = {
                         }
                     }
                 }
+            });
+
+            res.status(200).json({
+                success: true,
+                data: updatePost,
+                message: 'Post has been successfully updated'
             });
         } catch (err) { next(err); }
     },
