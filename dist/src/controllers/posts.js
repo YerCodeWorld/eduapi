@@ -171,10 +171,10 @@ exports.postsController = {
     },
     async updatePost(req, res, next) {
         try {
-            const { id } = req.params; // id is unknown as far as I know. Need to check implementation
-            const { title, slug, summary, content, coverImage, featured, published } = req.body;
+            const { slug } = req.params;
+            const { title, summary, content, coverImage, featured, published } = req.body;
             const existingPost = await DbClient_1.prisma.post.findUnique({
-                where: { id }
+                where: { slug }
             });
             if (!existingPost) {
                 return res.status(404).json({
@@ -204,7 +204,7 @@ exports.postsController = {
                 ...(published !== undefined && { published })
             };
             const updatePost = await DbClient_1.prisma.post.update({
-                where: { id },
+                where: { slug },
                 data: updateData,
                 include: {
                     user: {
@@ -215,6 +215,11 @@ exports.postsController = {
                         }
                     }
                 }
+            });
+            res.status(200).json({
+                success: true,
+                data: updatePost,
+                message: 'Post has been successfully updated'
             });
         }
         catch (err) {

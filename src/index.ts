@@ -34,6 +34,7 @@ app.use(cors({
         'https://www.ieduguide.com',
         'http://www.ieduguide.com',
         'http://ieduguide.com',
+        'https://edu-text-phi.vercel.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

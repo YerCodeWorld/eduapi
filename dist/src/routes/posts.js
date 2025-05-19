@@ -8,8 +8,8 @@ exports.postRoutes = router;
 // Discrepancy on find method (slug/id) should be changed after determined what approach works best
 router.post('/', posts_1.postsController.createPost);
 router.get('/', posts_1.postsController.getAllPosts);
-router.get('user/:email', posts_1.postsController.getPostByEmail);
+router.get('/user/:email', posts_1.postsController.getPostByEmail);
 router.get('/slug/:slug', posts_1.postsController.getPostsBySlug);
-router.put('/:id', posts_1.postsController.updatePost);
+router.put('/:slug', posts_1.postsController.updatePost);
 router.delete('/:slug', posts_1.postsController.deletePost);
 //# sourceMappingURL=posts.js.map
