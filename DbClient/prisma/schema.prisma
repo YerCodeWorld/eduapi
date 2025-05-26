@@ -9,19 +9,20 @@ datasource db {
 
 model User {
   // what does uuid() do? "Universally Unique Identifier."
-  id                String      @id @default(uuid())
-  role              UserRole    @default(STUDENT) // Exactly, student is the default
-  email             String      @unique
-  name              String      @unique // Also unique no? I wans't before
+  id                String          @id @default(uuid())
+  role              UserRole        @default(STUDENT) // Exactly, student is the default
+  email             String          @unique
+  name              String          @unique // Also unique no? I wans't before
   country           String
   picture           String? // optional? Just like typescript?
-  createdAt         DateTime    @default(now())
+  createdAt         DateTime        @default(now())
   // The site has different color options, this would save this parameter according to the user, no?
   preferredColor    PageColors
   preferredLanguage Language
-  posts             Post[]      @relation("UserPosts") // UPDATED: Added posts relation column
-  testimonies       Testimony[] @relation("UserTestimonies")
-  dynamics          Dynamic[]   @relation("UserDynamics")
+  posts             Post[]          @relation("UserPosts") // UPDATED: Added posts relation column
+  testimonies       Testimony[]     @relation("UserTestimonies")
+  dynamics          Dynamic[]       @relation("UserDynamics")
+  profile           TeacherProfile? @relation("TeacherProfile")
 
   @@map("users") // I guess this map function saves the model or something?
 }
@@ -201,3 +202,145 @@ model Dynamic {
   @@index([difficulty])
   @@map("dynamics")
 }
+
+// Finally adding teacher profiles models.
+model TeacherProfile {
+  id        String @id @default(uuid())
+  userEmail String @unique
+  user      User   @relation("TeacherProfile", fields: [userEmail], references: [email], onDelete: Cascade)
+
+  // Basic Profile Info
+  displayName  String?
+  tagline      String? // ??
+  bio          String? @db.Text
+  profileImage String?
+  coverImage   String?
+  introVideo   String?
+  introAudio   String?
+
+  // Theme & Customization
+  themeColor     String  @default("#A47BB9")
+  layoutStyle    String  @default("modern") // modern, minimal, creative
+  showCoverImage Boolean @default(true)
+  showIntroMedia Boolean @default(true)
+  profileEmoji   String?
+  personalQuote  String?
+
+  // Contact & Social
+  phoneNumber String?
+  whatsapp    String?
+  telegram    String?
+  instagram   String?
+  linkedin    String?
+  website     String?
+  timezone    String  @default("UTC")
+
+  // Teaching Info
+  yearsExperience   Int?
+  nativeLanguage    String?
+  teachingLanguages String[] // Array of languages they teach
+  specializations   String[] // Array of specializations
+  teachingStyle     String?  @db.Text
+  classroomRules    String?  @db.Text
+
+  // Availability (simple format)
+  availabilityTags String[] // ["weekdays", "evenings", "weekends", "mornings"]
+  hourlyRate       Decimal? @db.Decimal(10, 2)
+  currency         String   @default("USD")
+
+  // Profile Settings
+  isPublic           Boolean @default(true)
+  allowContactForm   Boolean @default(true)
+  showRates          Boolean @default(false)
+  showExperience     Boolean @default(true)
+  showEducation      Boolean @default(true)
+  showCertifications Boolean @default(true)
+
+  // Meta
+  profileViews Int      @default(0)
+  lastActive   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  education       TeacherEducation[]
+  experience      TeacherExperience[]
+  certifications  TeacherCertification[]
+  profileSections TeacherProfileSection[]
+
+  @@map("teacher_profiles")
+}
+
+model TeacherEducation {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  degree      String
+  institution String
+  field       String?
+  startYear   Int
+  endYear     Int?
+  isOngoing   Boolean @default(false)
+  description String?
+
+  createdAt DateTime @default(now())
+
+  @@map("teacher_education")
+}
+
+model TeacherExperience {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  title       String
+  company     String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@map("teacher_experience")
+}
+
+model TeacherCertification {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  name          String
+  issuer        String
+  issueDate     DateTime
+  expiryDate    DateTime?
+  credentialId  String?
+  credentialUrl String?
+  description   String?
+
+  createdAt DateTime @default(now())
+
+  @@map("teacher_certifications")
+}
+
+model TeacherProfileSection {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  sectionType String // 'bio', 'availability', 'cv', 'style', 'contact', 'resources'
+  title       String?
+  content     String? @db.Text
+  isVisible   Boolean @default(true)
+  sortOrder   Int     @default(0)
+  customData  Json? // For storing section-specific data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teacher_profile_sections")
+}
+
+// ADD MODELS FOR PAGE CONFIG
