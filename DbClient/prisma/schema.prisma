@@ -21,6 +21,7 @@ model User {
   preferredLanguage Language
   posts             Post[]      @relation("UserPosts") // UPDATED: Added posts relation column
   testimonies       Testimony[] @relation("UserTestimonies")
+  dynamics          Dynamic[]   @relation("UserDynamics")
 
   @@map("users") // I guess this map function saves the model or something?
 }
@@ -132,4 +133,71 @@ enum Language {
   SPANISH
   ENGLISH
   FRENCH
+}
+
+// Add this enum for dynamic types
+enum DynamicType {
+  READING
+  CONVERSATION
+  TEACHING_STRATEGY
+  GRAMMAR
+  VOCABULARY
+  GAME
+  COMPETITION
+  GENERAL
+}
+
+// Add this enum for difficulty levels
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Add this enum for age groups
+enum AgeGroup {
+  KIDS // 5-12
+  TEENS // 13-17
+  ADULTS // 18+
+  ALL_AGES // Suitable for all
+}
+
+// Add this new model for dynamics
+model Dynamic {
+  id              String  @id @default(uuid())
+  title           String
+  slug            String  @unique
+  objective       String // Target/what this dynamic aims to achieve
+  description     String // Brief summary
+  content         String  @db.Text // Rich text content with execution steps
+  materialsNeeded String? // Optional materials required
+
+  // Metadata fields
+  duration    Int // Duration in minutes
+  minStudents Int             @default(2)
+  maxStudents Int?            @default(40) // Optional max students
+  ageGroup    AgeGroup
+  difficulty  DifficultyLevel @default(INTERMEDIATE)
+  dynamicType DynamicType
+
+  // Publishing fields
+  published Boolean @default(false)
+  featured  Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  authorEmail String
+  user        User   @relation("UserDynamics", fields: [authorEmail], references: [email], onDelete: Cascade)
+
+  // Indexing for performance
+  @@index([authorEmail])
+  @@index([published])
+  @@index([featured])
+  @@index([dynamicType])
+  @@index([ageGroup])
+  @@index([difficulty])
+  @@map("dynamics")
 }

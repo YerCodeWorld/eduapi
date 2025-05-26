@@ -5,6 +5,7 @@ import multer from 'multer';
 
 // Extend Request type to include file property from multer
 interface MulterRequest extends Request {
+    // @ts-ignore
     file?: multer.File;
 }
 
