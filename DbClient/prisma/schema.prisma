@@ -22,7 +22,7 @@ model User {
   posts             Post[]          @relation("UserPosts") // UPDATED: Added posts relation column
   testimonies       Testimony[]     @relation("UserTestimonies")
   dynamics          Dynamic[]       @relation("UserDynamics")
-  profile           TeacherProfile? @relation("TeacherProfile")
+  teacherProfile    TeacherProfile?
 
   @@map("users") // I guess this map function saves the model or something?
 }
@@ -70,14 +70,13 @@ model Post {
   @@map("posts")
 }
 
-// CREATED: New model for extra posts
+// TODO: Check usage. Report, otherwise just remove.
 model ExtraPost {
   id         String   @id @default(uuid())
   title      String
   slug       String
   coverImage String?
   createdAt  DateTime @default(now())
-
   // These won't need a user but rather will be a dataset of content randomly created by anybody. No need to specify.
 }
 
@@ -128,12 +127,13 @@ enum UserRole {
   ADMIN
   TEACHER
   STUDENT
+  // MOD // Add4ed moderator for special use cases | Check usage before adapting
 }
 
 enum Language {
   SPANISH
   ENGLISH
-  FRENCH
+  // Removed french
 }
 
 // Add this enum for dynamic types
@@ -203,15 +203,16 @@ model Dynamic {
   @@map("dynamics")
 }
 
-// Finally adding teacher profiles models.
+// Add these models to your existing DbClient/prisma/schema.prisma
+
 model TeacherProfile {
-  id        String @id @default(uuid())
-  userEmail String @unique
-  user      User   @relation("TeacherProfile", fields: [userEmail], references: [email], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Basic Profile Info
   displayName  String?
-  tagline      String? // ??
+  tagline      String?
   bio          String? @db.Text
   profileImage String?
   coverImage   String?
@@ -342,5 +343,3 @@ model TeacherProfileSection {
 
   @@map("teacher_profile_sections")
 }
-
-// ADD MODELS FOR PAGE CONFIG

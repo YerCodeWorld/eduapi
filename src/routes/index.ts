@@ -1,10 +1,10 @@
-// src/routes/index.ts - Updated to include dynamics route
+// src/routes/index.ts - Updated with teacher profiles
 import { Router } from 'express';
 import { userRoutes } from "./users";
 import { testimonyRoutes } from "./testimonies";
 import { postRoutes } from "./posts";
 import { imageRoutes } from "./cloudinary";
-import { dynamicRoutes } from "./dynamics";
+import { teacherProfileRoutes } from "./teacherProfiles";
 
 const router: Router = Router();
 
@@ -12,6 +12,6 @@ router.use('/users', userRoutes);
 router.use('/testimonies', testimonyRoutes);
 router.use('/posts', postRoutes);
 router.use('/images', imageRoutes);
-router.use('/dynamics', dynamicRoutes); // New dynamics route
+router.use('/teacher-profiles', teacherProfileRoutes);
 
 export { router as routes };
