@@ -374,7 +374,7 @@ export const teacherProfileController = {
                 message: "Teacher profile created successfully"
             });
         } catch (error) {
-            next(error);
+            next(error + "Try again later");
         }
     },
 
