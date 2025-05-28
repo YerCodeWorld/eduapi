@@ -24,6 +24,8 @@ model User {
   dynamics          Dynamic[]       @relation("UserDynamics")
   teacherProfile    TeacherProfile?
 
+  exercises Exercise[] @relation("UserExercises")
+
   @@map("users") // I guess this map function saves the model or something?
 }
 
@@ -342,4 +344,59 @@ model TeacherProfileSection {
   updatedAt DateTime @updatedAt
 
   @@map("teacher_profile_sections")
+}
+
+// ----------------------------------------------------------------
+
+model Exercise {
+  id             String             @id @default(uuid())
+  title          String
+  instructions   String?
+  type           ExerciseType
+  difficulty     ExerciseDifficulty @default(INTERMEDIATE)
+  category       ExerciseCategory   @default(GENERAL)
+  content        Json
+  hints          String[]
+  explanation    String?
+  tags           String[]
+  timesCompleted Int                @default(0)
+  isPublished    Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  // Relations
+  authorEmail String
+  user        User   @relation("UserExercises", fields: [authorEmail], references: [email], onDelete: Cascade)
+
+  // Indexes
+  @@index([authorEmail])
+  @@index([type])
+  @@index([difficulty])
+  @@index([category])
+  @@index([isPublished])
+  @@map("exercises")
+}
+
+enum ExerciseType {
+  FILL_BLANK
+  MATCHING
+  MULTIPLE_CHOICE
+  ORDERING
+}
+
+enum ExerciseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ExerciseCategory {
+  GRAMMAR
+  VOCABULARY
+  READING
+  WRITING
+  LISTENING
+  SPEAKING
+  CONVERSATION
+  GENERAL
 }
