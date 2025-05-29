@@ -130,12 +130,121 @@ export const exercisesController = {
         }
     },
 
+    // src/controllers/exercises.ts - Updated createExercisesBulk method
+    async createExercisesBulk(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { exercises } = req.body;
+
+            if (!Array.isArray(exercises) || exercises.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid exercises array'
+                });
+            }
+
+            // Ensure all exercises have proper structure and JSON content
+            const processedExercises = exercises.map(exercise => ({
+                ...exercise,
+                // Ensure content is properly formatted as JSON
+                content: typeof exercise.content === 'string'
+                    ? JSON.parse(exercise.content)
+                    : exercise.content,
+                // Ensure arrays are properly formatted
+                hints: exercise.hints || [],
+                tags: exercise.tags || [],
+                // Set defaults
+                timesCompleted: 0,
+                isPublished: exercise.isPublished ?? false,
+                // Ensure dates are set by Prisma
+                createdAt: undefined,
+                updatedAt: undefined
+            }));
+
+            // Validate required fields
+            for (const exercise of processedExercises) {
+                if (!exercise.title || !exercise.type || !exercise.content || !exercise.authorEmail) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Missing required fields in exercise'
+                    });
+                }
+            }
+
+            // Use transaction for bulk creation
+            const created = await prisma.$transaction(async (tx) => {
+                // Create all exercises
+                const createdExercises = await Promise.all(
+                    processedExercises.map(exercise =>
+                        tx.exercise.create({
+                            data: exercise,
+                            include: {
+                                user: {
+                                    select: {
+                                        name: true,
+                                        email: true,
+                                        picture: true
+                                    }
+                                }
+                            }
+                        })
+                    )
+                );
+
+                return createdExercises;
+            });
+
+            return res.status(201).json({
+                success: true,
+                data: created,
+                message: `Created ${created.length} exercises successfully`
+            });
+        } catch (error) {
+            console.error('Error creating exercises:', error);
+
+            // Send more detailed error in development
+            if (process.env.NODE_ENV === 'development') {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to create exercises',
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                    details: error
+                });
+            }
+
+            next(error);
+        }
+    },
+
+    // Also update the single createExercise for consistency
     async createExercise(req: Request, res: Response, next: NextFunction) {
         try {
             const exerciseData = req.body;
 
+            // Process the exercise data
+            const processedData = {
+                ...exerciseData,
+                // Ensure content is properly formatted as JSON
+                content: typeof exerciseData.content === 'string'
+                    ? JSON.parse(exerciseData.content)
+                    : exerciseData.content,
+                // Ensure arrays are properly formatted
+                hints: exerciseData.hints || [],
+                tags: exerciseData.tags || [],
+                // Set defaults
+                timesCompleted: 0,
+                isPublished: exerciseData.isPublished ?? false
+            };
+
+            // Validate required fields
+            if (!processedData.title || !processedData.type || !processedData.content || !processedData.authorEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields'
+                });
+            }
+
             const exercise = await prisma.exercise.create({
-                data: exerciseData,
+                data: processedData,
                 include: {
                     user: {
                         select: {
@@ -153,51 +262,7 @@ export const exercisesController = {
                 message: 'Exercise created successfully'
             });
         } catch (error) {
-            next(error);
-        }
-    },
-
-    async createExercisesBulk(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { exercises } = req.body;
-
-            if (!Array.isArray(exercises) || exercises.length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid exercises array'
-                });
-            }
-
-            const createdExercises = await prisma.exercise.createMany({
-                data: exercises
-            });
-
-            const created = await prisma.exercise.findMany({
-                where: {
-                    authorEmail: exercises[0].authorEmail,
-                    createdAt: {
-                        gte: new Date(Date.now() - 1000) // Last second
-                    }
-                },
-                include: {
-                    user: {
-                        select: {
-                            name: true,
-                            email: true,
-                            picture: true
-                        }
-                    }
-                },
-                orderBy: { createdAt: 'desc' },
-                take: exercises.length
-            });
-
-            return res.status(201).json({
-                success: true,
-                data: created,
-                message: `Created ${createdExercises.count} exercises successfully`
-            });
-        } catch (error) {
+            console.error('Error creating exercise:', error);
             next(error);
         }
     },
