@@ -382,6 +382,17 @@ enum ExerciseType {
   MATCHING
   MULTIPLE_CHOICE
   ORDERING
+  LETTER_SOUP
+  CROSSWORD
+  // Many ideas:
+  // 1 -General reading with exercises at the end
+  // 2 - Guided reading with fill-in-blnk sitautions (we could even write our own way the story develops)
+  // 3 - Studetn reads and has tp answer some questions to continue (dynamic rendering)
+  READING
+  TIMELINE_SORTING // Can be very interesting epending on implementation
+  // This coould have been added in one of the existing, but I want it to be paid special attention
+  TRUE_OR_FALSE
+  CANDY_CRUSH
 }
 
 enum ExerciseDifficulty {
