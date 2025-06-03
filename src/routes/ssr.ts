@@ -147,12 +147,11 @@ export function createSSRRouter() {
             const cleanDescription = post.summary ||
                 post.content.replace(/<[^>]*>/g, '').slice(0, 160) + '...';
 
-            // Convert base64 to proper URL if needed
-            let imageUrl = post.coverImage || 'https://ieduguide.com/images/default-blog.jpg';
+            // Handle base64 images - convert to default image for social sharing
+            let imageUrl = post.coverImage || 'https://ieduguide.com/images/blog-og.jpg';
             if (imageUrl.startsWith('data:')) {
-                // If it's a base64 image, use a default image instead
-                // Social platforms don't support base64 images in meta tags
-                imageUrl = 'https://ieduguide.com/images/default-blog.jpg';
+                // Social platforms don't support base64 images
+                imageUrl = 'https://ieduguide.com/images/blog-og.jpg';
             }
 
             const html = generateHTML({

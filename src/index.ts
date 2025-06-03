@@ -5,7 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "node:path";
 import { routes } from './routes';
-import { ssrRoutes } from './routes/ssr'; // Direct import
+import { createSSRRouter } from './routes/ssr';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
@@ -44,28 +44,21 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// API routes - HIGHEST PRIORITY
+// API routes - these take precedence
 app.use('/api', routes);
 
-// SSR Routes - Mount directly for bot requests
-app.use((req, res, next) => {
-    const userAgent = req.get('User-Agent') || '';
+// SSR Routes - MUST come before static files
+const ssrRouter = createSSRRouter();
+app.use('/', ssrRouter);
 
-    // Check if this is a bot/crawler
-    const isBot = /facebookexternalhit|twitterbot|whatsapp|telegram|linkedin|slack|discord|googlebot|bingbot|prerender|postman|insomnia|chrome-lighthouse/i.test(userAgent);
-
-    if (isBot) {
-        // Let SSR routes handle it
-        return ssrRoutes(req, res, next);
-    }
-
-    // Not a bot, continue to static files
-    next();
-});
-
-// Static file serving for Express API's own frontend
+// Static file serving for API documentation - only for /api-docs path
 const publicPath = path.join(__dirname, '..', 'public');
-app.use(express.static(publicPath));
+app.use('/api-docs', express.static(publicPath));
+
+// Serve API documentation at /api-docs
+app.get('/api-docs', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -77,14 +70,9 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     });
 });
 
-// Catch-all route - API frontend (MUST BE LAST)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
-
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-    console.log(`Express API frontend available at: http://localhost:${PORT}`);
+    console.log(`API documentation available at: http://localhost:${PORT}/api-docs`);
     console.log(`API endpoints available at: http://localhost:${PORT}/api`);
-    console.log(`SSR enabled for social media bots and crawlers`);
+    console.log(`SSR enabled for social media bots`);
 });
