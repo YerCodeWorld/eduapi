@@ -24,9 +24,19 @@ const generateHTML = (seoData: {
         modifiedTime
     } = seoData;
 
-    // Ensure clean description (no quotes that break meta tags)
-    const cleanDescription = description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const cleanTitle = title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    // Ensure clean description (no quotes or newlines that break meta tags)
+    const cleanDescription = description
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const cleanTitle = title
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\n/g, ' ')
+        .trim();
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -137,10 +147,18 @@ export function createSSRRouter() {
             const cleanDescription = post.summary ||
                 post.content.replace(/<[^>]*>/g, '').slice(0, 160) + '...';
 
+            // Convert base64 to proper URL if needed
+            let imageUrl = post.coverImage || 'https://ieduguide.com/images/default-blog.jpg';
+            if (imageUrl.startsWith('data:')) {
+                // If it's a base64 image, use a default image instead
+                // Social platforms don't support base64 images in meta tags
+                imageUrl = 'https://ieduguide.com/images/default-blog.jpg';
+            }
+
             const html = generateHTML({
                 title: `${post.title} - EduGuiders Blog`,
                 description: cleanDescription,
-                image: post.coverImage || 'https://ieduguide.com/images/default-blog.jpg',
+                image: imageUrl,
                 url: `https://ieduguide.com/blog/${slug}`,
                 type: 'article',
                 author: post.user?.name,
