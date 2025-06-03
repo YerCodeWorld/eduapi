@@ -334,6 +334,90 @@ export function createSSRRouter() {
         }
     });
 
+    // Home Page SSR
+    router.get('/', async (req: Request, res: Response) => {
+        const html = generateHTML({
+            title: 'EduGuiders - Find Your Perfect English Teacher Online',
+            description: 'Connect with expert English teachers on EduGuiders. Access quality learning resources, interactive exercises, teaching dynamics, and achieve your educational goals with personalized guidance.',
+            image: 'https://ieduguide.com/images/home-og.jpg',
+            url: 'https://ieduguide.com',
+            type: 'website'
+        });
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+    });
+
+    // Teachers Discovery Page SSR
+    router.get('/teachers', async (req: Request, res: Response) => {
+        const html = generateHTML({
+            title: 'Find English Teachers Online - Expert Tutors Available',
+            description: 'Connect with professional English teachers and tutors. Browse profiles, compare specializations, and find the perfect instructor for your learning goals.',
+            image: 'https://ieduguide.com/images/teachers-og.jpg',
+            url: 'https://ieduguide.com/teachers',
+            type: 'website'
+        });
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+    });
+
+    // Blog Index Page SSR
+    router.get('/blog', async (req: Request, res: Response) => {
+        const html = generateHTML({
+            title: 'EduBlog - Teacher Insights & Educational Articles',
+            description: 'Read expert educational content from professional teachers. Discover teaching strategies, classroom management tips, and educational insights on the EduGuiders blog.',
+            image: 'https://ieduguide.com/images/blog-og.jpg',
+            url: 'https://ieduguide.com/blog',
+            type: 'website'
+        });
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+    });
+
+    // Dynamics Index Page SSR
+    router.get('/dynamics', async (req: Request, res: Response) => {
+        const html = generateHTML({
+            title: 'Teaching Dynamics - Innovative Classroom Strategies',
+            description: 'Discover innovative teaching strategies and classroom activities shared by expert educators. Find creative dynamics for all age groups and difficulty levels.',
+            image: 'https://ieduguide.com/images/dynamics-og.jpg',
+            url: 'https://ieduguide.com/dynamics',
+            type: 'website'
+        });
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+    });
+
+    // Exercises Page SSR
+    router.get('/exercises', async (req: Request, res: Response) => {
+        const html = generateHTML({
+            title: 'English Learning Exercises - Interactive Games & Activities',
+            description: 'Practice English with interactive exercises and games. Improve your grammar, vocabulary, reading, and writing skills with fun learning activities.',
+            image: 'https://ieduguide.com/images/exercises-og.jpg',
+            url: 'https://ieduguide.com/exercises',
+            type: 'website'
+        });
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+    });
+
+    // Testimonies Page SSR
+    router.get('/testimonies', async (req: Request, res: Response) => {
+        const html = generateHTML({
+            title: 'Student Testimonials - EduGuiders Success Stories',
+            description: 'Read what students, parents, and teachers say about EduGuiders. Discover success stories and experiences from our educational community.',
+            image: 'https://ieduguide.com/images/testimonies-og.jpg',
+            url: 'https://ieduguide.com/testimonies',
+            type: 'website'
+        });
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+    });
+
     return router;
 }
 
