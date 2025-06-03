@@ -1,11 +1,11 @@
-// src/index.ts - Updated Express server that preserves original API behavior
-import express, {Express} from "express";
+// src/index.ts - Fixed Express server with proper SSR handling
+import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import path from "node:path";
 import { routes } from './routes';
-import { ssrRoutes } from './routes/ssr'; // New SSR routes
+import { createSSRRouter } from './routes/ssr'; // Updated import
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
@@ -15,7 +15,7 @@ app.use(helmet({
         directives: {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
             "script-src": ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
-            "img-src": ["'self", "data:"],
+            "img-src": ["'self'", "data:", "https:"],
         },
     },
 }));
@@ -29,8 +29,7 @@ app.use(cors({
         'http://localhost:3000',
         'https://api.ieduguide.com',
         'https://ieduguide.com',
-        'https://www.ieduguide.com',
-        'https://edu-text-phi.vercel.app'
+        'https://www.ieduguide.com'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -44,54 +43,54 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// API routes (existing) - HIGHEST PRIORITY
+// API routes - HIGHEST PRIORITY
 app.use('/api', routes);
 
-// SSR middleware - Only apply to specific routes and conditions
-app.use('/', (req, res, next) => {
+// Static file serving for Express API's own frontend
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+
+// SSR middleware - ONLY for bots and crawlers on specific routes
+const ssrRouter = createSSRRouter();
+app.use((req: Request, res: Response, next: NextFunction) => {
+    // Skip SSR for API calls, static files, and API frontend
+    if (req.path.startsWith('/api') ||
+        req.path.includes('.') || // Skip files with extensions
+        req.path === '/' && req.hostname.includes('api.ieduguide.com')) {
+        return next();
+    }
+
+    // Define SSR-eligible routes
     const ssrRoutePatterns = [
-        /^\/$/,                           // Home
-        /^\/blog\/?$/,                    // Blog index
-        /^\/blog\/[^\/]+$/,              // Blog posts
-        /^\/dynamics\/?$/,               // Dynamics index  
-        /^\/dynamics\/[^\/]+$/,          // Individual dynamics
-        /^\/teachers\/?$/,               // Teachers index
-        /^\/teachers\/[^\/]+$/,          // Teacher profiles
-        /^\/exercises\/?$/,              // Exercises index
-        /^\/exercises\/[^\/]+$/,         // Individual exercises
+        /^\/blog\/[^\/]+$/,        // Individual blog posts
+        /^\/dynamics\/[^\/]+$/,    // Individual dynamics
+        /^\/teachers\/[^\/]+$/,    // Individual teacher profiles
+        /^\/exercises\/[^\/]+$/,   // Individual exercises
     ];
 
     const isSSRRoute = ssrRoutePatterns.some(pattern => pattern.test(req.path));
 
     if (isSSRRoute) {
-        // Check if this request should get SSR treatment
         const userAgent = req.get('User-Agent') || '';
-        const referer = req.get('Referer') || '';
-        const origin = req.get('Origin') || '';
 
-        // Conditions for SSR:
-        // 1. Social media bots/crawlers
-        // 2. Search engine bots
-        // 3. Requests from main domain (ieduguide.com)
-        // 4. Direct requests without referer (link sharing)
-        const isBot = /bot|crawler|spider|facebook|twitter|whatsapp|telegram|linkedin|slack/i.test(userAgent);
-        const isSearchBot = /googlebot|bingbot|yandex|duckduckbot/i.test(userAgent);
-        const isFromMainDomain = referer.includes('ieduguide.com') || origin.includes('ieduguide.com');
-        const isDirectRequest = !referer || referer === '';
+        // Check if this is a bot/crawler that needs SSR
+        const needsSSR =
+            // Social media bots
+            /facebookexternalhit|twitterbot|whatsapp|telegram|linkedin|slack|discord/i.test(userAgent) ||
+            // Search engine bots
+            /googlebot|bingbot|yandex|duckduckbot|baiduspider/i.test(userAgent) ||
+            // Preview generators
+            /prerender|postman|insomnia|chrome-lighthouse/i.test(userAgent);
 
-        if (isBot || isSearchBot || isFromMainDomain || isDirectRequest) {
-            // Use SSR routes
-            return ssrRoutes(req, res, next);
+        if (needsSSR) {
+            // Use SSR router
+            return ssrRouter(req, res, next);
         }
     }
 
-    // Continue to normal Express API behavior
+    // Continue to next middleware
     next();
 });
-
-// Static file serving for your Express API's own frontend (PRESERVED)
-const publicPath = path.join(__dirname, '..', 'public');
-app.use(express.static(publicPath));
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -103,16 +102,20 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     });
 });
 
-// Your original Express API frontend - COMPLETELY PRESERVED
-app.get(/^\/(?!api).*/, (_req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+// Catch-all route for Express API frontend
+app.get('*', (req, res) => {
+    // Only serve the API frontend for api.ieduguide.com
+    if (req.hostname.includes('api.ieduguide.com') || req.hostname === 'localhost') {
+        res.sendFile(path.join(publicPath, 'index.html'));
+    } else {
+        // For other domains, return 404
+        res.status(404).json({ error: 'Not found' });
+    }
 });
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     console.log(`Express API frontend available at: http://localhost:${PORT}`);
     console.log(`API endpoints available at: http://localhost:${PORT}/api`);
-    console.log(`SSR routes enabled for social media crawlers`);
+    console.log(`SSR enabled for social media bots and crawlers`);
 });
-
-export default app;
