@@ -7,6 +7,7 @@ import { postRoutes } from "./posts";
 import { imageRoutes } from "./cloudinary";
 import { teacherProfileRoutes } from "./teacherProfiles";
 import { exerciseRoutes } from "./exercises";
+import { exercisePackageRoutes } from './exercisePackages';
 
 const router: Router = Router();
 
@@ -17,5 +18,6 @@ router.use('/dynamics', dynamicRoutes);
 router.use('/images', imageRoutes);
 router.use('/teacher-profiles', teacherProfileRoutes);
 router.use('/exercises', exerciseRoutes);
+router.use('/exercise-packages', exercisePackageRoutes);
 
 export { router as routes };
