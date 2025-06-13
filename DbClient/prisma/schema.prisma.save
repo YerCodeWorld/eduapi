@@ -9,24 +9,22 @@ datasource db {
 
 model User {
   // what does uuid() do? "Universally Unique Identifier."
-  id                 String                  @id @default(uuid())
-  role               UserRole                @default(STUDENT) // Exactly, student is the default
-  email              String                  @unique
-  name               String                  @unique // Also unique no? I wans't before
-  country            String
-  picture            String? // optional? Just like typescript?
-  createdAt          DateTime                @default(now())
+  id                String          @id @default(uuid())
+  role              UserRole        @default(STUDENT) // Exactly, student is the default
+  email             String          @unique
+  name              String          @unique // Also unique no? I wans't before
+  country           String
+  picture           String? // optional? Just like typescript?
+  createdAt         DateTime        @default(now())
   // The site has different color options, this would save this parameter according to the user, no?
-  preferredColor     PageColors
-  preferredLanguage  Language
-  posts              Post[]                  @relation("UserPosts") // UPDATED: Added posts relation column
-  testimonies        Testimony[]             @relation("UserTestimonies")
-  dynamics           Dynamic[]               @relation("UserDynamics")
-  exercises          Exercise[]              @relation("UserExercises")
-  packageCompletions UserPackageCompletion[]
-  gameSessions       UserGameSession[]
+  preferredColor    PageColors
+  preferredLanguage Language
+  posts             Post[]          @relation("UserPosts") // UPDATED: Added posts relation column
+  testimonies       Testimony[]     @relation("UserTestimonies")
+  dynamics          Dynamic[]       @relation("UserDynamics")
+  teacherProfile    TeacherProfile?
 
-  teacherProfile TeacherProfile?
+  exercises Exercise[] @relation("UserExercises")
 
   @@map("users") // I guess this map function saves the model or something?
 }
@@ -347,7 +345,6 @@ model TeacherProfileSection {
 
   @@map("teacher_profile_sections")
 }
-
 // ----------------------------------------------------------------
 
 model Exercise {
@@ -365,12 +362,6 @@ model Exercise {
   isPublished    Boolean            @default(false)
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
-  packageId      String?
-  package        ExercisePackage?   @relation("PackageExercises", fields: [packageId], references: [id], onDelete: SetNull)
-
-  // ... rest of existing Exercise model ...
-
-  // Add package index
 
   // Relations
   authorEmail String
@@ -381,7 +372,6 @@ model Exercise {
   @@index([type])
   @@index([difficulty])
   @@index([category])
-  @@index([packageId])
   @@index([isPublished])
   @@map("exercises")
 }
@@ -406,11 +396,8 @@ enum ExerciseType {
 
 enum ExerciseDifficulty {
   BEGINNER
-  UPPER_BEGINNER
   INTERMEDIATE
-  UPPER_INTERMIDIATE
   ADVANCED
-  SUPER_ADVANCED
 }
 
 enum ExerciseCategory {
@@ -422,175 +409,4 @@ enum ExerciseCategory {
   SPEAKING
   CONVERSATION
   GENERAL
-}
-
-// Add these models to your existing apps/web-next/prisma/schema.prisma
-
-// =============================================================================
-// EXERCISE PACKAGES SYSTEM
-// =============================================================================
-
-model ExercisePackage {
-  id          String           @id @default(uuid())
-  title       String
-  slug        String           @unique
-  description String
-  image       String? // Package cover image
-  category    ExerciseCategory @default(GENERAL)
-
-  // SEO & Sharing
-  metaTitle       String?
-  metaDescription String?
-
-  // Package limits and structure
-  maxExercises Int @default(30) // Up to 30 exercises (5 per difficulty)
-
-  // Publishing
-  isPublished Boolean @default(false)
-  featured    Boolean @default(false)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations - NO authorEmail (only teachers can create, but no specific attribution)
-  exercises Exercise[] @relation("PackageExercises")
-
-  // Completion tracking
-  completions UserPackageCompletion[]
-
-  @@index([category])
-  @@index([isPublished])
-  @@index([featured])
-  @@index([slug])
-  @@map("exercise_packages")
-}
-
-// Track user progress on packages
-model UserPackageCompletion {
-  id        String @id @default(uuid())
-  userId    String
-  packageId String
-
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  package ExercisePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
-
-  // Completion tracking
-  completedExercises String[] // Array of exercise IDs (space-efficient slugs)
-  completionRate     Float    @default(0) // Percentage completed
-  lastActivityAt     DateTime @default(now())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, packageId])
-  @@index([userId])
-  @@index([packageId])
-  @@map("user_package_completions")
-}
-
-// =============================================================================
-// GAMES SYSTEM
-// =============================================================================
-
-model Game {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  description String
-  image       String? // Game cover image
-  gameType    GameType
-
-  // Game configuration (JSON for flexibility)
-  config Json // Game-specific configuration
-
-  // SEO & Publishing
-  metaTitle       String?
-  metaDescription String?
-  isPublished     Boolean @default(false)
-  featured        Boolean @default(false)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  levels   GameLevel[]       @relation("GameLevels")
-  sessions UserGameSession[]
-
-  @@index([gameType])
-  @@index([isPublished])
-  @@index([featured])
-  @@index([slug])
-  @@map("games")
-}
-
-enum GameType {
-  WORD_SEARCH
-  CATCH_CORRECT_WORD
-  MEMORY_QUIZ
-  WORD_CRUSH
-  PUZZLE
-}
-
-model GameLevel {
-  id          String @id @default(uuid())
-  gameId      String
-  levelNumber Int
-  title       String
-
-  // Level configuration
-  config Json // Level-specific data (words, rules, difficulty settings)
-
-  // Difficulty progression
-  difficulty  Int @default(1) // 1-10 scale
-  unlockAfter Int @default(0) // Previous level number needed to unlock
-
-  // Rewards/Points
-  maxPoints Int  @default(100)
-  timeLimit Int? // Seconds, null for no limit
-
-  // Publishing
-  isPublished Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  game     Game              @relation("GameLevels", fields: [gameId], references: [id], onDelete: Cascade)
-  sessions UserGameSession[]
-
-  @@unique([gameId, levelNumber])
-  @@index([gameId])
-  @@index([levelNumber])
-  @@map("game_levels")
-}
-
-model UserGameSession {
-  id      String  @id @default(uuid())
-  userId  String
-  gameId  String
-  levelId String?
-
-  // Session data
-  score       Int     @default(0)
-  completed   Boolean @default(false)
-  timeElapsed Int? // Seconds taken
-  attempts    Int     @default(1)
-
-  // Progress tracking
-  progress Json? // Game-specific progress data
-
-  startedAt   DateTime  @default(now())
-  completedAt DateTime?
-
-  // Relations
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game  Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  level GameLevel? @relation(fields: [levelId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([gameId])
-  @@index([levelId])
-  @@map("user_game_sessions")
 }
