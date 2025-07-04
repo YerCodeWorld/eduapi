@@ -152,6 +152,9 @@ export const exercisesController = {
                 // Ensure arrays are properly formatted
                 hints: exercise.hints || [],
                 tags: exercise.tags || [],
+                // Handle new fields
+                rawEduScript: exercise.rawEduScript || null,
+                variation: exercise.variation || null,
                 // Set defaults
                 timesCompleted: 0,
                 isPublished: exercise.isPublished ?? false,
@@ -230,6 +233,9 @@ export const exercisesController = {
                 // Ensure arrays are properly formatted
                 hints: exerciseData.hints || [],
                 tags: exerciseData.tags || [],
+                // Handle new fields
+                rawEduScript: exerciseData.rawEduScript || null,
+                variation: exerciseData.variation || null,
                 // Set defaults
                 timesCompleted: 0,
                 isPublished: exerciseData.isPublished ?? false

@@ -113,10 +113,13 @@ model Exercise {
 
   instructions String?
   type         ExerciseType
+  variation    String?
 
   difficulty ExerciseDifficulty @default(INTERMEDIATE)
   category   ExerciseCategory   @default(GENERAL)
   content    Json
+
+  rawEduScript   String?    @db.Text
 
   hints       String[]
   explanation String?
