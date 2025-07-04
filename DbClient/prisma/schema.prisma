@@ -8,27 +8,31 @@ datasource db {
 }
 
 model User {
-  // what does uuid() do? "Universally Unique Identifier."
-  id                 String                  @id @default(uuid())
-  role               UserRole                @default(STUDENT) // Exactly, student is the default
-  email              String                  @unique
-  name               String                  @unique // Also unique no? I wans't before
-  country            String
-  picture            String? // optional? Just like typescript?
-  createdAt          DateTime                @default(now())
-  // The site has different color options, this would save this parameter according to the user, no?
-  preferredColor     PageColors
-  preferredLanguage  Language
-  posts              Post[]                  @relation("UserPosts") // UPDATED: Added posts relation column
-  testimonies        Testimony[]             @relation("UserTestimonies")
-  dynamics           Dynamic[]               @relation("UserDynamics")
-  exercises          Exercise[]              @relation("UserExercises")
+  id      String   @id @default(uuid())
+  role    UserRole @default(STUDENT)
+  email   String   @unique
+  name    String   @unique
+  picture String?
+
+  createdAt         DateTime   @default(now())
+  preferredColor    PageColors
+  preferredLanguage Language
+
+  exp Int @default(0) // New
+
+  testimonies Testimony[] @relation("UserTestimonies")
+
   packageCompletions UserPackageCompletion[]
-  gameSessions       UserGameSession[]
+  // gameSessions       UserGameSession[]  : For future reference
+
+  // I believe these should be in the TeacherProfile... only justification would be user with elevated permissions.
+  posts     Post[]     @relation("UserPosts")
+  dynamics  Dynamic[]  @relation("UserDynamics")
+  exercises Exercise[] @relation("UserExercises")
 
   teacherProfile TeacherProfile?
 
-  @@map("users") // I guess this map function saves the model or something?
+  @@map("users")
 }
 
 model Testimony {
@@ -36,168 +40,64 @@ model Testimony {
   content   String
   createdAt DateTime @default(now())
   rating    Int      @default(4)
-  title     String?
   featured  Boolean  @default(false)
-  // A relation for saving the user that posted the review
-  // userRole (I want to take from the role from the user; I guess it would be better)
-  // to do it from a query? (taking userRole from the userId that posted the review?)
   userEmail String
   user      User     @relation("UserTestimonies", fields: [userEmail], references: [email], onDelete: Cascade)
 
   @@map("testimonies")
 }
 
-// CREATED: New model for posts
 model Post {
-  id         String   @id @default(uuid())
-  title      String
-  slug       String   @unique
-  summary    String
-  content    String   @db.Text
+  id    String @id @default(uuid())
+  title String
+
+  slug    String @unique
+  summary String
+  content String @db.Text
+
   coverImage String?
-  featured   Boolean  @default(false)
-  published  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+
+  featured  Boolean  @default(false)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   authorEmail String
   user        User   @relation("UserPosts", fields: [authorEmail], references: [email], onDelete: Cascade)
 
-  // Is it necessary to add fields for user name, picture and role or letting this like is and infering that other
-  // data from the user we get?
-
-  // Indexing helps to speed up queries as it provides a bridge in the form of an ID to a model connected through a relation
-  // like the ones we are dealing with in here.
   @@index([authorEmail])
   @@index([featured])
   @@index([published])
   @@map("posts")
 }
 
-// TODO: Check usage. Report, otherwise just remove.
-model ExtraPost {
-  id         String   @id @default(uuid())
-  title      String
-  slug       String
-  coverImage String?
-  createdAt  DateTime @default(now())
-  // These won't need a user but rather will be a dataset of content randomly created by anybody. No need to specify.
-}
-
-// This is suupposed to be a table to show stadistics
-// It should be autoincrease or something like that |From our queries I would increase the value depending on the data we get along the way
-// For example, when a new student is registered, this value here would upload automatically
-model Statistic {
-  id           Int @id @default(autoincrement())
-  countries    Int
-  satisfaction Int // this is a porcentage really
-  teachers     Int
-  students     Int
-  courses      Int
-  classes      Int
-
-  @@map("statistics")
-}
-
-// Now, here I want to set things I can control from my admin page, like the page color,
-// toggling visibility of some components (saving visibility state for components)
-// and any other thing that right now i don't have very clear in my mind
-model pageConfig {
-  id          Int        @id @default(autoincrement())
-  description String
-  address     String
-  phone       String
-  email       String
-  color       PageColors @default(LAVENDER)
-  language    Language   @default(SPANISH)
-
-  @@map("page_config")
-}
-
-// I guess this is ok? And in the code I would match the value with the corresponding hex code no?
-enum PageColors {
-  LAVENDER
-  CORAL
-  TEAL
-  WARMPINK
-  BLUE
-  PURPLE
-}
-
-// These are the types of users
-// The admins and teachers are already determined through environment variables (which could be changed to the databse),
-// the students are any user whose emails are not registered as either admin or teacher
-enum UserRole {
-  ADMIN
-  TEACHER
-  STUDENT
-  // MOD // Add4ed moderator for special use cases | Check usage before adapting
-}
-
-enum Language {
-  SPANISH
-  ENGLISH
-  // Removed french
-}
-
-// Add this enum for dynamic types
-enum DynamicType {
-  READING
-  CONVERSATION
-  TEACHING_STRATEGY
-  GRAMMAR
-  VOCABULARY
-  GAME
-  COMPETITION
-  GENERAL
-}
-
-// Add this enum for difficulty levels
-enum DifficultyLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-}
-
-// Add this enum for age groups
-enum AgeGroup {
-  KIDS // 5-12
-  TEENS // 13-17
-  ADULTS // 18+
-  ALL_AGES // Suitable for all
-}
-
-// Add this new model for dynamics
 model Dynamic {
-  id              String  @id @default(uuid())
-  title           String
-  slug            String  @unique
-  objective       String // Target/what this dynamic aims to achieve
-  description     String // Brief summary
-  content         String  @db.Text // Rich text content with execution steps
-  materialsNeeded String? // Optional materials required
+  id    String @id @default(uuid())
+  title String
 
-  // Metadata fields
-  duration    Int // Duration in minutes
+  slug String @unique
+
+  objective       String
+  description     String
+  content         String  @db.Text
+  materialsNeeded String?
+
+  duration    Int
   minStudents Int             @default(2)
   maxStudents Int?            @default(40) // Optional max students
   ageGroup    AgeGroup
   difficulty  DifficultyLevel @default(INTERMEDIATE)
   dynamicType DynamicType
 
-  // Publishing fields
   published Boolean @default(false)
   featured  Boolean @default(false)
 
-  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   authorEmail String
   user        User   @relation("UserDynamics", fields: [authorEmail], references: [email], onDelete: Cascade)
 
-  // Indexing for performance
   @@index([authorEmail])
   @@index([published])
   @@index([featured])
@@ -207,7 +107,45 @@ model Dynamic {
   @@map("dynamics")
 }
 
-// Add these models to your existing DbClient/prisma/schema.prisma
+model Exercise {
+  id    String @id @default(uuid())
+  title String
+
+  instructions String?
+  type         ExerciseType
+
+  difficulty ExerciseDifficulty @default(INTERMEDIATE)
+  category   ExerciseCategory   @default(GENERAL)
+  content    Json
+
+  hints       String[]
+  explanation String?
+
+  tags           String[]
+  timesCompleted Int      @default(0)
+
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  packageId String?
+  package   ExercisePackage? @relation("PackageExercises", fields: [packageId], references: [id], onDelete: SetNull)
+
+  authorEmail String
+  user        User   @relation("UserExercises", fields: [authorEmail], references: [email], onDelete: Cascade)
+
+  @@index([authorEmail])
+  @@index([type])
+  @@index([difficulty])
+  @@index([category])
+  @@index([packageId])
+  @@index([isPublished])
+  @@map("exercises")
+}
+
+// =============================================================================
+// TEACHER PROFILE
+// =============================================================================
 
 model TeacherProfile {
   id     String @id @default(uuid())
@@ -348,84 +286,6 @@ model TeacherProfileSection {
   @@map("teacher_profile_sections")
 }
 
-// ----------------------------------------------------------------
-
-model Exercise {
-  id             String             @id @default(uuid())
-  title          String
-  instructions   String?
-  type           ExerciseType
-  difficulty     ExerciseDifficulty @default(INTERMEDIATE)
-  category       ExerciseCategory   @default(GENERAL)
-  content        Json
-  hints          String[]
-  explanation    String?
-  tags           String[]
-  timesCompleted Int                @default(0)
-  isPublished    Boolean            @default(false)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  packageId      String?
-  package        ExercisePackage?   @relation("PackageExercises", fields: [packageId], references: [id], onDelete: SetNull)
-
-  // ... rest of existing Exercise model ...
-
-  // Add package index
-
-  // Relations
-  authorEmail String
-  user        User   @relation("UserExercises", fields: [authorEmail], references: [email], onDelete: Cascade)
-
-  // Indexes
-  @@index([authorEmail])
-  @@index([type])
-  @@index([difficulty])
-  @@index([category])
-  @@index([packageId])
-  @@index([isPublished])
-  @@map("exercises")
-}
-
-enum ExerciseType {
-  FILL_BLANK
-  MATCHING
-  MULTIPLE_CHOICE
-  ORDERING
-  LETTER_SOUP
-  CROSSWORD
-  // Many ideas:
-  // 1 -General reading with exercises at the end
-  // 2 - Guided reading with fill-in-blnk sitautions (we could even write our own way the story develops)
-  // 3 - Studetn reads and has tp answer some questions to continue (dynamic rendering)
-  READING
-  TIMELINE_SORTING // Can be very interesting epending on implementation
-  // This coould have been added in one of the existing, but I want it to be paid special attention
-  TRUE_OR_FALSE
-  CANDY_CRUSH
-}
-
-enum ExerciseDifficulty {
-  BEGINNER
-  UPPER_BEGINNER
-  INTERMEDIATE
-  UPPER_INTERMIDIATE
-  ADVANCED
-  SUPER_ADVANCED
-}
-
-enum ExerciseCategory {
-  GRAMMAR
-  VOCABULARY
-  READING
-  WRITING
-  LISTENING
-  SPEAKING
-  CONVERSATION
-  GENERAL
-}
-
-// Add these models to your existing apps/web-next/prisma/schema.prisma
-
 // =============================================================================
 // EXERCISE PACKAGES SYSTEM
 // =============================================================================
@@ -437,6 +297,7 @@ model ExercisePackage {
   description String
   image       String? // Package cover image
   category    ExerciseCategory @default(GENERAL)
+  article     String?          @db.Text
 
   // SEO & Sharing
   metaTitle       String?
@@ -449,21 +310,29 @@ model ExercisePackage {
   isPublished Boolean @default(false)
   featured    Boolean @default(false)
 
-  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations - NO authorEmail (only teachers can create, but no specific attribution)
-  exercises Exercise[] @relation("PackageExercises")
-
-  // Completion tracking
-  completions UserPackageCompletion[]
+  exercises            Exercise[]              @relation("PackageExercises")
+  completions          UserPackageCompletion[]
+  PackageDifficultyBox PackageDifficultyBox[]
 
   @@index([category])
   @@index([isPublished])
   @@index([featured])
   @@index([slug])
   @@map("exercise_packages")
+}
+
+model PackageDifficultyBox {
+  id         String          @id @default(uuid())
+  package    ExercisePackage @relation(fields: [packageId], references: [id])
+  packageId  String
+  difficulty DifficultyLevel
+  title      String
+  article    String          @db.Text
+
+  @@unique([packageId, difficulty])
 }
 
 // Track user progress on packages
@@ -490,107 +359,205 @@ model UserPackageCompletion {
 }
 
 // =============================================================================
-// GAMES SYSTEM
+// ENUMS
 // =============================================================================
 
-model Game {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  description String
-  image       String? // Game cover image
-  gameType    GameType
+enum PageColors {
+  LAVENDER
+  CORAL
+  TEAL
+  WARMPINK
+  BLUE
+  PURPLE
+}
 
-  // Game configuration (JSON for flexibility)
-  config Json // Game-specific configuration
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
 
-  // SEO & Publishing
+enum Language {
+  SPANISH
+  ENGLISH
+}
+
+enum DynamicType {
+  READING
+  CONVERSATION
+  TEACHING_STRATEGY
+  GRAMMAR
+  VOCABULARY
+  GAME
+  COMPETITION
+  GENERAL
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum AgeGroup {
+  KIDS
+  TEENS
+  ADULTS
+  ALL_AGES
+}
+
+enum ExerciseType {
+  FILL_BLANK
+  MATCHING
+  MULTIPLE_CHOICE
+  ORDERING
+
+  CATEGORIZER
+  SELECTOR
+
+  READING
+  CONVERSATION
+  PUZZLE
+}
+
+enum ExerciseDifficulty {
+  BEGINNER
+  UPPER_BEGINNER
+  INTERMEDIATE
+  UPPER_INTERMEDIATE
+  ADVANCED
+  SUPER_ADVANCED
+}
+
+enum ExerciseCategory {
+  GRAMMAR
+  VOCABULARY
+  READING
+  WRITING
+  LISTENING
+  SPEAKING
+  CONVERSATION
+  GENERAL
+}
+
+// =============================================================================
+// PAGE CONFIG
+// =============================================================================
+// =============================================================================
+// IMPROVED PAGE CONFIGURATION MODEL
+// =============================================================================
+// Note: Keeping as single model for simplicity while adding improvements
+
+model SiteConfig {
+  id String @id @default(uuid())
+
+  // Basic Site Information
+  siteName    String  @default("EduGuiders")
+  description String  @db.Text
+  tagline     String? // Optional marketing tagline
+
+  // Contact Information
+  address String
+  phone   String
+  email   String
+
+  // Additional Contact Methods
+  whatsapp     String?
+  telegram     String?
+  supportEmail String?
+
+  // Social Media Links
+  facebook  String?
+  instagram String?
+  linkedin  String?
+  youtube   String?
+  tiktok    String?
+
+  // Social Media Content Embeds
+  instagramPosts String[]
+  tiktokPosts    String[]
+
+  // SEO & Meta
   metaTitle       String?
   metaDescription String?
-  isPublished     Boolean @default(false)
-  featured        Boolean @default(false)
+  keywords        String[] // Array of SEO keywords
+  favicon         String? // URL to favicon
+  logo            String? // URL to main logo
+  logoAlt         String? // Alt text for logo
+
+  // Feature Toggles
+  enableRegistration     Boolean @default(true)
+  enableTeacherProfiles  Boolean @default(true)
+  enableExercisePackages Boolean @default(true)
+  enableGames            Boolean @default(true)
+  enableTestimonials     Boolean @default(true)
+  enableBlog             Boolean @default(true)
+  maintenanceMode        Boolean @default(false)
+
+  // Content Configuration
+  welcomeMessage    String? @db.Text
+  footerText        String? @db.Text
+  privacyPolicyUrl  String?
+  termsOfServiceUrl String?
+  aboutUsContent    String? @db.Text
+
+  // Localization
+  defaultLanguage    Language   @default(ENGLISH)
+  supportedLanguages Language[]
+
+  // Analytics & Tracking
+  googleAnalyticsId String?
+  facebookPixelId   String?
+  hotjarId          String?
+
+  // Email Configuration
+  supportEmailName String? @default("EduGuiders Support")
+  noReplyEmail     String?
+  emailSignature   String? @db.Text
+
+  // Points & Gamification
+  pointsPerExercise        Int @default(10)
+  pointsPerPackageComplete Int @default(100)
+
+  // API & Integration
+  maxApiRequestsPerHour Int     @default(1000)
+  enablePublicApi       Boolean @default(false)
+  webhookSecret         String?
+
+  // File Upload Limits
+  maxImageSize      Int      @default(5242880) // 5MB in bytes
+  maxVideoSize      Int      @default(52428800) // 50MB in bytes
+  allowedImageTypes String[] @default(["jpg", "jpeg", "png", "gif"])
+  allowedVideoTypes String[] @default(["mp4", "webm", "mov"])
+
+  // Version & Updates
+  version     String   @default("1.0.0")
+  lastUpdated DateTime @default(now())
+  updatedBy   String? // Email of admin who made changes
 
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  levels   GameLevel[]       @relation("GameLevels")
-  sessions UserGameSession[]
-
-  @@index([gameType])
-  @@index([isPublished])
-  @@index([featured])
-  @@index([slug])
-  @@map("games")
+  @@map("site_config")
 }
 
-enum GameType {
-  WORD_SEARCH
-  CATCH_CORRECT_WORD
-  MEMORY_QUIZ
-  WORD_CRUSH
-  PUZZLE
-}
+// Helper model for storing key-value configuration pairs
+// for additional flexibility
+model ConfigSetting {
+  id       String @id @default(uuid())
+  key      String @unique
+  value    String @db.Text
+  category String @default("general") // general, theme, features, etc.
 
-model GameLevel {
-  id          String @id @default(uuid())
-  gameId      String
-  levelNumber Int
-  title       String
-
-  // Level configuration
-  config Json // Level-specific data (words, rules, difficulty settings)
-
-  // Difficulty progression
-  difficulty  Int @default(1) // 1-10 scale
-  unlockAfter Int @default(0) // Previous level number needed to unlock
-
-  // Rewards/Points
-  maxPoints Int  @default(100)
-  timeLimit Int? // Seconds, null for no limit
-
-  // Publishing
-  isPublished Boolean @default(false)
+  description String? // What this setting controls
+  dataType    String  @default("string") // string, boolean, number, json
+  isPublic    Boolean @default(false) // Can be accessed by frontend
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  game     Game              @relation("GameLevels", fields: [gameId], references: [id], onDelete: Cascade)
-  sessions UserGameSession[]
-
-  @@unique([gameId, levelNumber])
-  @@index([gameId])
-  @@index([levelNumber])
-  @@map("game_levels")
-}
-
-model UserGameSession {
-  id      String  @id @default(uuid())
-  userId  String
-  gameId  String
-  levelId String?
-
-  // Session data
-  score       Int     @default(0)
-  completed   Boolean @default(false)
-  timeElapsed Int? // Seconds taken
-  attempts    Int     @default(1)
-
-  // Progress tracking
-  progress Json? // Game-specific progress data
-
-  startedAt   DateTime  @default(now())
-  completedAt DateTime?
-
-  // Relations
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game  Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  level GameLevel? @relation(fields: [levelId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([gameId])
-  @@index([levelId])
-  @@map("user_game_sessions")
+  @@index([category])
+  @@index([isPublic])
+  @@map("config_settings")
 }

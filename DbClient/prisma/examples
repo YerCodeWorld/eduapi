@@ -1,0 +1,91 @@
+
+// =============================================================================
+// GAMES SYSTEM: For future reference
+// =============================================================================
+/**
+ * model Game {
+ * id          String   @id @default(uuid())
+ * title       String
+ * slug        String   @unique
+ * description String
+ * image       String? // Game cover image
+ * gameType    GameType
+ * // Game configuration (JSON for flexibility)
+ * config Json // Game-specific configuration
+ * // SEO & Publishing
+ * metaTitle       String?
+ * metaDescription String?
+ * isPublished     Boolean @default(false)
+ * featured        Boolean @default(false)
+ * // Timestamps
+ * createdAt DateTime @default(now())
+ * updatedAt DateTime @updatedAt
+ * // Relations
+ * levels   GameLevel[]       @relation("GameLevels")
+ * sessions UserGameSession[]
+ * @@index([gameType])
+ * @@index([isPublished])
+ * @@index([featured])
+ * @@index([slug])
+ * @@map("games")
+ * }
+ * model GameLevel {
+ * id          String @id @default(uuid())
+ * gameId      String
+ * levelNumber Int
+ * title       String
+ * config Json // Level-specific data (words, rules, difficulty settings)
+ * // Difficulty progression
+ * difficulty  Int @default(1) // 1-10 scale
+ * unlockAfter Int @default(0) // Previous level number needed to unlock
+ * // Rewards/Points
+ * maxPoints Int  @default(100)
+ * timeLimit Int? // Seconds, null for no limit
+ * // Publishing
+ * isPublished Boolean @default(false)
+ * createdAt DateTime @default(now())
+ * updatedAt DateTime @updatedAt
+ * // Relations
+ * game     Game              @relation("GameLevels", fields: [gameId], references: [id], onDelete: Cascade)
+ * sessions UserGameSession[]
+ * @@unique([gameId, levelNumber])
+ * @@index([gameId])
+ * @@index([levelNumber])
+ * @@map("game_levels")
+ * }
+ * model UserGameSession {
+ * id      String  @id @default(uuid())
+ * userId  String
+ * gameId  String
+ * levelId String?
+ * // Session data
+ * score       Int     @default(0)
+ * completed   Boolean @default(false)
+ * timeElapsed Int? // Seconds taken
+ * attempts    Int     @default(1)
+ * // Progress tracking
+ * progress Json? // Game-specific progress data
+ * startedAt   DateTime  @default(now())
+ * completedAt DateTime?
+ * // Relations
+ * user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+ * game  Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+ * level GameLevel? @relation(fields: [levelId], references: [id], onDelete: SetNull)
+ * @@index([userId])
+ * @@index([gameId])
+ * @@index([levelId])
+ * @@map("user_game_sessions")
+ * }
+ */
+
+
+/**
+ * enum GameType {
+ * WORD_SEARCH
+ * WORD_CATCHER
+ * WORD_CRUSH
+ * CROSS_WORD
+ * BRWORDGAME
+ * PUZZLE
+ * }
+ */

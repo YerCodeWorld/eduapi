@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "db:generate": "prisma generate --schema=./DbClient/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=./DbClient/prisma/schema.prisma",
-    "db:deploy": "prisma migrate deploy --schema=./DbClient/prisma/schema.prisma",
+    "db:deploy": "prisma migrate deploy --schema=./DbClient/prisma/schenma.prisma",
     "db:studio": "prisma studio --schema=./DbClient/prisma/schema.prisma",
     "check-types": "tsc --noEmit"
   },

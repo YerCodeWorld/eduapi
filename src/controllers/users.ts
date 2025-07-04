@@ -12,7 +12,6 @@ export const userController = {
                     email: true,
                     name: true,
                     role: true,
-                    country: true,
                     picture: true,
                     createdAt: true,
                     preferredColor: true,
@@ -38,7 +37,6 @@ export const userController = {
                     email: true,
                     name: true,
                     role: true,
-                    country: true,
                     picture: true,
                     createdAt: true,
                     preferredColor: true,
@@ -65,14 +63,13 @@ export const userController = {
                 email,
                 name,
                 role = 'STUDENT',  // ??
-                country,
                 picture,
                 preferredColor,
                 preferredLanguage
             } = req.body;
 
-            if (!email || !name || !country) {
-                console.error("User do not have valid email address, or name, or country");  // Which should never happen logically
+            if (!email || !name) {
+                console.error("User do not have valid email address or name");  // Which should never happen logically
             }
             // We are assuming that our implementations of this function do not call when users already exists in the DB
             const userData = await prisma.user.create({
@@ -80,11 +77,10 @@ export const userController = {
                     email,
                     name,
                     role: role as UserRole,
-                    country,
                     picture,
                     preferredColor: preferredColor,
                     preferredLanguage: preferredLanguage as Language
-                    }
+                }
             });
             const message = "User created successfully.";
 
