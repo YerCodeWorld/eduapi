@@ -448,7 +448,7 @@ enum ExerciseCategory {
 // =============================================================================
 // Note: Keeping as single model for simplicity while adding improvements
 
-model SiteConfig {
+model PageConfig {
   id String @id @default(uuid())
 
   // Basic Site Information
@@ -539,7 +539,7 @@ model SiteConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("site_config")
+  @@map("page_config")
 }
 
 // Helper model for storing key-value configuration pairs
