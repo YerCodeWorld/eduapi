@@ -113,7 +113,8 @@ model Exercise {
 
   instructions String?
   type         ExerciseType
-  variation    String?
+  variation    String?      @default("original")
+  style	       String? 
 
   difficulty ExerciseDifficulty @default(INTERMEDIATE)
   category   ExerciseCategory   @default(GENERAL)
@@ -418,8 +419,12 @@ enum ExerciseType {
   CATEGORIZER
   SELECTOR
 
+  MANUAL
+
   READING
   CONVERSATION
+  LISTENING
+
   PUZZLE
 }
 

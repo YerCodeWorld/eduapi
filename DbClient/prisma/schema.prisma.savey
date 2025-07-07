@@ -1,0 +1,412 @@
+generator Client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("VITE_DATABASE_URL")
+}
+
+model User {
+  // what does uuid() do? "Universally Unique Identifier."
+  id                String          @id @default(uuid())
+  role              UserRole        @default(STUDENT) // Exactly, student is the default
+  email             String          @unique
+  name              String          @unique // Also unique no? I wans't before
+  country           String
+  picture           String? // optional? Just like typescript?
+  createdAt         DateTime        @default(now())
+  // The site has different color options, this would save this parameter according to the user, no?
+  preferredColor    PageColors
+  preferredLanguage Language
+  posts             Post[]          @relation("UserPosts") // UPDATED: Added posts relation column
+  testimonies       Testimony[]     @relation("UserTestimonies")
+  dynamics          Dynamic[]       @relation("UserDynamics")
+  teacherProfile    TeacherProfile?
+
+  exercises Exercise[] @relation("UserExercises")
+
+  @@map("users") // I guess this map function saves the model or something?
+}
+
+model Testimony {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  rating    Int      @default(4)
+  title     String?
+  featured  Boolean  @default(false)
+  // A relation for saving the user that posted the review
+  // userRole (I want to take from the role from the user; I guess it would be better)
+  // to do it from a query? (taking userRole from the userId that posted the review?)
+  userEmail String
+  user      User     @relation("UserTestimonies", fields: [userEmail], references: [email], onDelete: Cascade)
+
+  @@map("testimonies")
+}
+
+// CREATED: New model for posts
+model Post {
+  id         String   @id @default(uuid())
+  title      String
+  slug       String   @unique
+  summary    String
+  content    String   @db.Text
+  coverImage String?
+  featured   Boolean  @default(false)
+  published  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  authorEmail String
+  user        User   @relation("UserPosts", fields: [authorEmail], references: [email], onDelete: Cascade)
+
+  // Is it necessary to add fields for user name, picture and role or letting this like is and infering that other
+  // data from the user we get?
+
+  // Indexing helps to speed up queries as it provides a bridge in the form of an ID to a model connected through a relation
+  // like the ones we are dealing with in here.
+  @@index([authorEmail])
+  @@index([featured])
+  @@index([published])
+  @@map("posts")
+}
+
+// TODO: Check usage. Report, otherwise just remove.
+model ExtraPost {
+  id         String   @id @default(uuid())
+  title      String
+  slug       String
+  coverImage String?
+  createdAt  DateTime @default(now())
+  // These won't need a user but rather will be a dataset of content randomly created by anybody. No need to specify.
+}
+
+// This is suupposed to be a table to show stadistics
+// It should be autoincrease or something like that |From our queries I would increase the value depending on the data we get along the way
+// For example, when a new student is registered, this value here would upload automatically
+model Statistic {
+  id           Int @id @default(autoincrement())
+  countries    Int
+  satisfaction Int // this is a porcentage really
+  teachers     Int
+  students     Int
+  courses      Int
+  classes      Int
+
+  @@map("statistics")
+}
+
+// Now, here I want to set things I can control from my admin page, like the page color,
+// toggling visibility of some components (saving visibility state for components)
+// and any other thing that right now i don't have very clear in my mind
+model pageConfig {
+  id          Int        @id @default(autoincrement())
+  description String
+  address     String
+  phone       String
+  email       String
+  color       PageColors @default(LAVENDER)
+  language    Language   @default(SPANISH)
+
+  @@map("page_config")
+}
+
+// I guess this is ok? And in the code I would match the value with the corresponding hex code no?
+enum PageColors {
+  LAVENDER
+  CORAL
+  TEAL
+  WARMPINK
+  BLUE
+  PURPLE
+}
+
+// These are the types of users
+// The admins and teachers are already determined through environment variables (which could be changed to the databse),
+// the students are any user whose emails are not registered as either admin or teacher
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+  // MOD // Add4ed moderator for special use cases | Check usage before adapting
+}
+
+enum Language {
+  SPANISH
+  ENGLISH
+  // Removed french
+}
+
+// Add this enum for dynamic types
+enum DynamicType {
+  READING
+  CONVERSATION
+  TEACHING_STRATEGY
+  GRAMMAR
+  VOCABULARY
+  GAME
+  COMPETITION
+  GENERAL
+}
+
+// Add this enum for difficulty levels
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Add this enum for age groups
+enum AgeGroup {
+  KIDS // 5-12
+  TEENS // 13-17
+  ADULTS // 18+
+  ALL_AGES // Suitable for all
+}
+
+// Add this new model for dynamics
+model Dynamic {
+  id              String  @id @default(uuid())
+  title           String
+  slug            String  @unique
+  objective       String // Target/what this dynamic aims to achieve
+  description     String // Brief summary
+  content         String  @db.Text // Rich text content with execution steps
+  materialsNeeded String? // Optional materials required
+
+  // Metadata fields
+  duration    Int // Duration in minutes
+  minStudents Int             @default(2)
+  maxStudents Int?            @default(40) // Optional max students
+  ageGroup    AgeGroup
+  difficulty  DifficultyLevel @default(INTERMEDIATE)
+  dynamicType DynamicType
+
+  // Publishing fields
+  published Boolean @default(false)
+  featured  Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  authorEmail String
+  user        User   @relation("UserDynamics", fields: [authorEmail], references: [email], onDelete: Cascade)
+
+  // Indexing for performance
+  @@index([authorEmail])
+  @@index([published])
+  @@index([featured])
+  @@index([dynamicType])
+  @@index([ageGroup])
+  @@index([difficulty])
+  @@map("dynamics")
+}
+
+// Add these models to your existing DbClient/prisma/schema.prisma
+
+model TeacherProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic Profile Info
+  displayName  String?
+  tagline      String?
+  bio          String? @db.Text
+  profileImage String?
+  coverImage   String?
+  introVideo   String?
+  introAudio   String?
+
+  // Theme & Customization
+  themeColor     String  @default("#A47BB9")
+  layoutStyle    String  @default("modern") // modern, minimal, creative
+  showCoverImage Boolean @default(true)
+  showIntroMedia Boolean @default(true)
+  profileEmoji   String?
+  personalQuote  String?
+
+  // Contact & Social
+  phoneNumber String?
+  whatsapp    String?
+  telegram    String?
+  instagram   String?
+  linkedin    String?
+  website     String?
+  timezone    String  @default("UTC")
+
+  // Teaching Info
+  yearsExperience   Int?
+  nativeLanguage    String?
+  teachingLanguages String[] // Array of languages they teach
+  specializations   String[] // Array of specializations
+  teachingStyle     String?  @db.Text
+  classroomRules    String?  @db.Text
+
+  // Availability (simple format)
+  availabilityTags String[] // ["weekdays", "evenings", "weekends", "mornings"]
+  hourlyRate       Decimal? @db.Decimal(10, 2)
+  currency         String   @default("USD")
+
+  // Profile Settings
+  isPublic           Boolean @default(true)
+  allowContactForm   Boolean @default(true)
+  showRates          Boolean @default(false)
+  showExperience     Boolean @default(true)
+  showEducation      Boolean @default(true)
+  showCertifications Boolean @default(true)
+
+  // Meta
+  profileViews Int      @default(0)
+  lastActive   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  education       TeacherEducation[]
+  experience      TeacherExperience[]
+  certifications  TeacherCertification[]
+  profileSections TeacherProfileSection[]
+
+  @@map("teacher_profiles")
+}
+
+model TeacherEducation {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  degree      String
+  institution String
+  field       String?
+  startYear   Int
+  endYear     Int?
+  isOngoing   Boolean @default(false)
+  description String?
+
+  createdAt DateTime @default(now())
+
+  @@map("teacher_education")
+}
+
+model TeacherExperience {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  title       String
+  company     String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@map("teacher_experience")
+}
+
+model TeacherCertification {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  name          String
+  issuer        String
+  issueDate     DateTime
+  expiryDate    DateTime?
+  credentialId  String?
+  credentialUrl String?
+  description   String?
+
+  createdAt DateTime @default(now())
+
+  @@map("teacher_certifications")
+}
+
+model TeacherProfileSection {
+  id               String         @id @default(uuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  sectionType String // 'bio', 'availability', 'cv', 'style', 'contact', 'resources'
+  title       String?
+  content     String? @db.Text
+  isVisible   Boolean @default(true)
+  sortOrder   Int     @default(0)
+  customData  Json? // For storing section-specific data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teacher_profile_sections")
+}
+// ----------------------------------------------------------------
+
+model Exercise {
+  id             String             @id @default(uuid())
+  title          String
+  instructions   String?
+  type           ExerciseType
+  difficulty     ExerciseDifficulty @default(INTERMEDIATE)
+  category       ExerciseCategory   @default(GENERAL)
+  content        Json
+  hints          String[]
+  explanation    String?
+  tags           String[]
+  timesCompleted Int                @default(0)
+  isPublished    Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  // Relations
+  authorEmail String
+  user        User   @relation("UserExercises", fields: [authorEmail], references: [email], onDelete: Cascade)
+
+  // Indexes
+  @@index([authorEmail])
+  @@index([type])
+  @@index([difficulty])
+  @@index([category])
+  @@index([isPublished])
+  @@map("exercises")
+}
+
+enum ExerciseType {
+  FILL_BLANK
+  MATCHING
+  MULTIPLE_CHOICE
+  ORDERING
+  LETTER_SOUP
+  CROSSWORD
+  // Many ideas:
+  // 1 -General reading with exercises at the end
+  // 2 - Guided reading with fill-in-blnk sitautions (we could even write our own way the story develops)
+  // 3 - Studetn reads and has tp answer some questions to continue (dynamic rendering)
+  READING
+  TIMELINE_SORTING // Can be very interesting epending on implementation
+  // This coould have been added in one of the existing, but I want it to be paid special attention
+  TRUE_OR_FALSE
+  CANDY_CRUSH
+}
+
+enum ExerciseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ExerciseCategory {
+  GRAMMAR
+  VOCABULARY
+  READING
+  WRITING
+  LISTENING
+  SPEAKING
+  CONVERSATION
+  GENERAL
+}
