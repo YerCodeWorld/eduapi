@@ -32,7 +32,7 @@ app.use(cors({
         'https://edu-text-phi.vercel.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'User-Agent'],
     credentials: true
 }));
 
